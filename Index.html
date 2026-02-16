@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+  <style>
+    /* ============ Reset & Base ============ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    /* ============ Header ============ */
+    .header {
+      background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+      color: #fff;
+      padding: 20px 24px 0;
+      box-shadow: 0 2px 12px rgba(26, 115, 232, 0.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 16px;
+    }
+
+    .header-top .material-icons-outlined {
+      font-size: 32px;
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      opacity: 0.8;
+      font-weight: 300;
+    }
+
+    /* ============ Tab Navigation ============ */
+    .tabs {
+      display: flex;
+      gap: 0;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 14px 20px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.7);
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      user-select: none;
+    }
+
+    .tab:hover {
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .tab.active {
+      color: #fff;
+      border-bottom-color: #fff;
+    }
+
+    .tab .material-icons-outlined {
+      font-size: 20px;
+    }
+
+    /* ============ Main Content ============ */
+    .main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+
+    .page {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============ Form Page ============ */
+    .form-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+      padding: 32px;
+    }
+
+    .form-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e8eaed;
+    }
+
+    .form-header .icon-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1a73e8, #4285f4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .form-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .form-header p {
+      font-size: 13px;
+      color: #5f6368;
+      margin-top: 2px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-group {
+      position: relative;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #5f6368;
+      margin-bottom: 8px;
+    }
+
+    .form-group label .material-icons-outlined {
+      font-size: 18px;
+      color: #1a73e8;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: 'Noto Sans JP', sans-serif;
+      color: #1a1a2e;
+      background: #fafafa;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #1a73e8;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+    }
+
+    .form-group input::placeholder {
+      color: #bdbdbd;
+    }
+
+    .form-group .input-suffix {
+      position: absolute;
+      right: 16px;
+      bottom: 14px;
+      font-size: 14px;
+      color: #9e9e9e;
+      pointer-events: none;
+    }
+
+    .form-group input[type="number"] {
+      padding-right: 32px;
+    }
+
+    .btn-submit {
+      grid-column: 1 / -1;
+      margin-top: 8px;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #1a73e8 0%, #1565c0 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'Noto Sans JP', sans-serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(26, 115, 232, 0.4);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-submit .material-icons-outlined {
+      font-size: 20px;
+    }
+
+    /* ============ List Page ============ */
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .list-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .list-header h2 .material-icons-outlined {
+      color: #1a73e8;
+    }
+
+    .record-count {
+      background: #e8f0fe;
+      color: #1a73e8;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .record-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .record-card:hover {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+      border-color: #1a73e8;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e8f0fe 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e8eaed;
+    }
+
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1a73e8, #4285f4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .card-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .card-position {
+      font-size: 12px;
+      color: #5f6368;
+      margin-top: 2px;
+    }
+
+    .district-badge {
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    .district-A { background: #1a73e8; }
+    .district-B { background: #0d904f; }
+    .district-C { background: #e37400; }
+    .district-D { background: #7b1fa2; }
+    .district-E { background: #c62828; }
+
+    .card-body {
+      padding: 16px 20px;
+    }
+
+    .card-info-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 14px;
+      color: #3c4043;
+    }
+
+    .card-info-row:not(:last-child) {
+      border-bottom: 1px solid #f1f3f4;
+    }
+
+    .card-info-row .material-icons-outlined {
+      font-size: 20px;
+      color: #5f6368;
+      flex-shrink: 0;
+    }
+
+    .card-info-row .label {
+      color: #80868b;
+      font-size: 12px;
+      min-width: 70px;
+      flex-shrink: 0;
+    }
+
+    .card-info-row .value {
+      font-weight: 500;
+      color: #1a1a2e;
+    }
+
+    .card-costs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .cost-item {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 10px 14px;
+      text-align: center;
+    }
+
+    .cost-label {
+      font-size: 11px;
+      color: #80868b;
+      margin-bottom: 4px;
+    }
+
+    .cost-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a73e8;
+    }
+
+    .card-footer {
+      padding: 12px 20px;
+      border-top: 1px solid #f1f3f4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-email {
+      font-size: 12px;
+      color: #9aa0a6;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card-email .material-icons-outlined {
+      font-size: 14px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      color: #5f6368;
+    }
+
+    .btn-icon:hover {
+      background: #e8f0fe;
+      color: #1a73e8;
+    }
+
+    .btn-icon.delete:hover {
+      background: #fce8e6;
+      color: #c62828;
+    }
+
+    .btn-icon .material-icons-outlined {
+      font-size: 20px;
+    }
+
+    /* ============ Empty State ============ */
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: #9aa0a6;
+    }
+
+    .empty-state .material-icons-outlined {
+      font-size: 64px;
+      color: #dadce0;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      font-weight: 500;
+      color: #5f6368;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+    }
+
+    /* ============ Loading ============ */
+    .loading {
+      text-align: center;
+      padding: 48px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e8eaed;
+      border-top-color: #1a73e8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 14px;
+      color: #5f6368;
+    }
+
+    /* ============ Modal ============ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 200;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      padding: 24px 28px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e8eaed;
+    }
+
+    .modal-header h3 {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-header h3 .material-icons-outlined {
+      color: #1a73e8;
+    }
+
+    .btn-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: #f1f3f4;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #5f6368;
+      transition: all 0.2s ease;
+    }
+
+    .btn-close:hover {
+      background: #e8eaed;
+    }
+
+    .modal-body {
+      padding: 24px 28px;
+    }
+
+    .modal-body .form-grid {
+      gap: 16px;
+    }
+
+    .modal-footer {
+      padding: 16px 28px 24px;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .btn-secondary {
+      padding: 10px 24px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      background: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'Noto Sans JP', sans-serif;
+      color: #5f6368;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      border-color: #bdbdbd;
+      background: #f8f9fa;
+    }
+
+    .btn-primary {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #1a73e8, #1565c0);
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Noto Sans JP', sans-serif;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-danger {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 10px;
+      background: #c62828;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Noto Sans JP', sans-serif;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-right: auto;
+    }
+
+    .btn-danger:hover {
+      background: #b71c1c;
+    }
+
+    .btn-danger:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* ============ Toast ============ */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      z-index: 300;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 90vw;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.success {
+      background: #0d904f;
+    }
+
+    .toast.error {
+      background: #c62828;
+    }
+
+    .toast .material-icons-outlined {
+      font-size: 20px;
+    }
+
+    /* ============ Delete Confirm ============ */
+    .confirm-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 250;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .confirm-overlay.active {
+      display: flex;
+    }
+
+    .confirm-dialog {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      animation: slideUp 0.3s ease;
+    }
+
+    .confirm-dialog .material-icons-outlined {
+      font-size: 48px;
+      color: #c62828;
+      margin-bottom: 16px;
+    }
+
+    .confirm-dialog h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .confirm-dialog p {
+      font-size: 14px;
+      color: #5f6368;
+      margin-bottom: 24px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    /* ============ Responsive ============ */
+    @media (max-width: 600px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-card {
+        padding: 24px 20px;
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card-costs {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .modal {
+        margin: 12px;
+      }
+
+      .modal-body {
+        padding: 20px;
+      }
+
+      .header-title {
+        font-size: 17px;
+      }
+    }
+
+    /* ============ Refresh Button ============ */
+    .btn-refresh {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: #e8f0fe;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1a73e8;
+      transition: all 0.2s ease;
+    }
+
+    .btn-refresh:hover {
+      background: #d2e3fc;
+    }
+
+    .btn-refresh .material-icons-outlined {
+      font-size: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    .btn-refresh:hover .material-icons-outlined {
+      transform: rotate(180deg);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ======== Header ======== -->
+  <div class="header">
+    <div class="header-top">
+      <span class="material-icons-outlined">receipt_long</span>
+      <div>
+        <div class="header-title">出張経費申請システム</div>
+        <div class="header-subtitle">Business Travel Expense Report</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('form')">
+        <span class="material-icons-outlined">edit_note</span>
+        申請入力
+      </div>
+      <div class="tab" onclick="switchTab('list')">
+        <span class="material-icons-outlined">view_list</span>
+        申請一覧
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== Main Content ======== -->
+  <div class="main">
+
+    <!-- ===== Application Form Page ===== -->
+    <div id="page-form" class="page active">
+      <div class="form-card">
+        <div class="form-header">
+          <div class="icon-circle">
+            <span class="material-icons-outlined">description</span>
+          </div>
+          <div>
+            <h2>出張経費申請書</h2>
+            <p>必要事項を入力して申請してください</p>
+          </div>
+        </div>
+
+        <form id="expenseForm" class="form-grid" onsubmit="handleSubmit(event)">
+          <div class="form-group">
+            <label>
+              <span class="material-icons-outlined">person</span>
+              名前
+            </label>
+            <input type="text" id="inp-name" placeholder="例：山田 太郎" required>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <span class="material-icons-outlined">business</span>
+              部署
+            </label>
+            <input type="text" id="inp-department" placeholder="例：営業部" required>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <span class="material-icons-outlined">badge</span>
+              役職
+            </label>
+            <input type="text" id="inp-position" placeholder="例：主任" required>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <span class="material-icons-outlined">location_on</span>
+              出張先
+            </label>
+            <input type="text" id="inp-destination" placeholder="例：大阪支社" required>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <span class="material-icons-outlined">calendar_today</span>
+              日時
+            </label>
+            <input type="date" id="inp-date" required>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <span class="material-icons-outlined">map</span>
+              地区
+            </label>
+            <select id="inp-district" required>
+              <option value="" disabled selected>地区を選択</option>
+              <option value="A">A 地区</option>
+              <option value="B">B 地区</option>
+              <option value="C">C 地区</option>
+              <option value="D">D 地区</option>
+              <option value="E">E 地区</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <span class="material-icons-outlined">train</span>
+              公共交通費
+            </label>
+            <input type="number" id="inp-transportCost" placeholder="0" min="0" required>
+            <span class="input-suffix">円</span>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <span class="material-icons-outlined">payments</span>
+              その他費用
+            </label>
+            <input type="number" id="inp-otherCost" placeholder="0" min="0" required>
+            <span class="input-suffix">円</span>
+          </div>
+
+          <button type="submit" class="btn-submit" id="btn-submit">
+            <span class="material-icons-outlined">send</span>
+            申請する
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===== List Page ===== -->
+    <div id="page-list" class="page">
+      <div class="list-header">
+        <h2>
+          <span class="material-icons-outlined">folder_open</span>
+          申請一覧
+        </h2>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span id="recordCount" class="record-count">0 件</span>
+          <button class="btn-refresh" onclick="loadRecords()" title="更新">
+            <span class="material-icons-outlined">refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="cardContainer">
+        <div class="loading">
+          <div class="spinner"></div>
+          <div class="loading-text">データを読み込んでいます...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== Edit Modal ======== -->
+  <div id="editModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>
+          <span class="material-icons-outlined">edit</span>
+          申請内容の修正
+        </h3>
+        <button class="btn-close" onclick="closeEditModal()">
+          <span class="material-icons-outlined">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm" class="form-grid">
+          <input type="hidden" id="edit-rowIndex">
+
+          <div class="form-group">
+            <label><span class="material-icons-outlined">person</span>名前</label>
+            <input type="text" id="edit-name" required>
+          </div>
+
+          <div class="form-group">
+            <label><span class="material-icons-outlined">business</span>部署</label>
+            <input type="text" id="edit-department" required>
+          </div>
+
+          <div class="form-group">
+            <label><span class="material-icons-outlined">badge</span>役職</label>
+            <input type="text" id="edit-position" required>
+          </div>
+
+          <div class="form-group">
+            <label><span class="material-icons-outlined">location_on</span>出張先</label>
+            <input type="text" id="edit-destination" required>
+          </div>
+
+          <div class="form-group">
+            <label><span class="material-icons-outlined">calendar_today</span>日時</label>
+            <input type="date" id="edit-date" required>
+          </div>
+
+          <div class="form-group">
+            <label><span class="material-icons-outlined">map</span>地区</label>
+            <select id="edit-district" required>
+              <option value="A">A 地区</option>
+              <option value="B">B 地区</option>
+              <option value="C">C 地区</option>
+              <option value="D">D 地区</option>
+              <option value="E">E 地区</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label><span class="material-icons-outlined">train</span>公共交通費</label>
+            <input type="number" id="edit-transportCost" min="0" required>
+            <span class="input-suffix">円</span>
+          </div>
+
+          <div class="form-group">
+            <label><span class="material-icons-outlined">payments</span>その他費用</label>
+            <input type="number" id="edit-otherCost" min="0" required>
+            <span class="input-suffix">円</span>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-danger" id="btn-modal-delete" onclick="confirmDelete()">
+          <span class="material-icons-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">delete</span>
+          削除
+        </button>
+        <button class="btn-secondary" onclick="closeEditModal()">キャンセル</button>
+        <button class="btn-primary" id="btn-modal-save" onclick="handleUpdate()">
+          <span class="material-icons-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">save</span>
+          保存
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== Delete Confirmation ======== -->
+  <div id="confirmOverlay" class="confirm-overlay">
+    <div class="confirm-dialog">
+      <span class="material-icons-outlined">warning</span>
+      <h3>申請の削除</h3>
+      <p>この申請データを削除しますか？<br>この操作は元に戻せません。</p>
+      <div class="confirm-actions">
+        <button class="btn-secondary" onclick="closeConfirm()">キャンセル</button>
+        <button class="btn-danger" id="btn-confirm-delete" onclick="handleDelete()">削除する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== Toast ======== -->
+  <div id="toast" class="toast"></div>
+
+  <!-- ======== JavaScript ======== -->
+  <script>
+    // ============ State ============
+    var currentEditRowIndex = null;
+
+    // ============ Tab Switching ============
+    function switchTab(page) {
+      // Update tabs
+      var tabs = document.querySelectorAll('.tab');
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+
+      var pages = document.querySelectorAll('.page');
+      pages.forEach(function(p) { p.classList.remove('active'); });
+
+      if (page === 'form') {
+        tabs[0].classList.add('active');
+        document.getElementById('page-form').classList.add('active');
+      } else {
+        tabs[1].classList.add('active');
+        document.getElementById('page-list').classList.add('active');
+        loadRecords();
+      }
+    }
+
+    // ============ Date Utilities ============
+    /**
+     * yyyymmdd形式の文字列を「yyyy年mm月dd日」に変換
+     */
+    function formatDateForDisplay(yyyymmdd) {
+      var s = String(yyyymmdd);
+      if (s.length !== 8) return s;
+      return s.substring(0, 4) + '年' + s.substring(4, 6) + '月' + s.substring(6, 8) + '日';
+    }
+
+    /**
+     * yyyymmdd形式の文字列を「yyyy-mm-dd」に変換（date input用）
+     */
+    function formatDateForInput(yyyymmdd) {
+      var s = String(yyyymmdd);
+      if (s.length !== 8) return s;
+      return s.substring(0, 4) + '-' + s.substring(4, 6) + '-' + s.substring(6, 8);
+    }
+
+    /**
+     * 金額を通貨書式にフォーマット
+     */
+    function formatCurrency(value) {
+      return '¥' + Number(value).toLocaleString('ja-JP');
+    }
+
+    // ============ Form Submit (New Record) ============
+    function handleSubmit(e) {
+      e.preventDefault();
+      var btn = document.getElementById('btn-submit');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:3px;margin:0;"></div> 送信中...';
+
+      var formData = {
+        name: document.getElementById('inp-name').value,
+        department: document.getElementById('inp-department').value,
+        position: document.getElementById('inp-position').value,
+        destination: document.getElementById('inp-destination').value,
+        date: document.getElementById('inp-date').value,
+        district: document.getElementById('inp-district').value,
+        transportCost: document.getElementById('inp-transportCost').value,
+        otherCost: document.getElementById('inp-otherCost').value
+      };
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showToast(result.message, 'success');
+          document.getElementById('expenseForm').reset();
+          btn.disabled = false;
+          btn.innerHTML = '<span class="material-icons-outlined">send</span> 申請する';
+        })
+        .withFailureHandler(function(err) {
+          showToast('エラー: ' + err.message, 'error');
+          btn.disabled = false;
+          btn.innerHTML = '<span class="material-icons-outlined">send</span> 申請する';
+        })
+        .addRecord(formData);
+    }
+
+    // ============ Load Records ============
+    function loadRecords() {
+      var container = document.getElementById('cardContainer');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div><div class="loading-text">データを読み込んでいます...</div></div>';
+
+      google.script.run
+        .withSuccessHandler(function(records) {
+          renderCards(records);
+        })
+        .withFailureHandler(function(err) {
+          container.innerHTML = '<div class="empty-state"><span class="material-icons-outlined">error_outline</span><h3>データの取得に失敗しました</h3><p>' + err.message + '</p></div>';
+        })
+        .getAllRecords();
+    }
+
+    // ============ Render Cards ============
+    function renderCards(records) {
+      var container = document.getElementById('cardContainer');
+      document.getElementById('recordCount').textContent = records.length + ' 件';
+
+      if (!records || records.length === 0) {
+        container.innerHTML =
+          '<div class="empty-state">' +
+            '<span class="material-icons-outlined">inbox</span>' +
+            '<h3>申請データがありません</h3>' +
+            '<p>「申請入力」タブから新しい申請を登録してください</p>' +
+          '</div>';
+        return;
+      }
+
+      var html = '<div class="cards-grid">';
+      records.forEach(function(rec) {
+        var initials = rec.name ? rec.name.charAt(0) : '?';
+        var districtClass = 'district-' + rec.district;
+        var dateDisplay = formatDateForDisplay(rec.date);
+
+        html +=
+          '<div class="record-card" onclick="openEditModal(' + rec.rowIndex + ', this)" data-row=\'' + JSON.stringify(rec).replace(/'/g, "&#39;") + '\'>' +
+            '<div class="card-header">' +
+              '<div class="card-header-left">' +
+                '<div class="card-avatar">' + initials + '</div>' +
+                '<div>' +
+                  '<div class="card-name">' + escapeHtml(rec.name) + '</div>' +
+                  '<div class="card-position">' + escapeHtml(rec.department) + ' / ' + escapeHtml(rec.position) + '</div>' +
+                '</div>' +
+              '</div>' +
+              '<span class="district-badge ' + districtClass + '">' + escapeHtml(rec.district) + ' 地区</span>' +
+            '</div>' +
+            '<div class="card-body">' +
+              '<div class="card-info-row">' +
+                '<span class="material-icons-outlined">location_on</span>' +
+                '<span class="label">出張先</span>' +
+                '<span class="value">' + escapeHtml(rec.destination) + '</span>' +
+              '</div>' +
+              '<div class="card-info-row">' +
+                '<span class="material-icons-outlined">calendar_today</span>' +
+                '<span class="label">日時</span>' +
+                '<span class="value">' + dateDisplay + '</span>' +
+              '</div>' +
+              '<div class="card-costs">' +
+                '<div class="cost-item">' +
+                  '<div class="cost-label">公共交通費</div>' +
+                  '<div class="cost-value">' + formatCurrency(rec.transportCost) + '</div>' +
+                '</div>' +
+                '<div class="cost-item">' +
+                  '<div class="cost-label">その他費用</div>' +
+                  '<div class="cost-value">' + formatCurrency(rec.otherCost) + '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="card-footer">' +
+              '<div class="card-email">' +
+                '<span class="material-icons-outlined">mail</span>' +
+                escapeHtml(rec.email) +
+              '</div>' +
+              '<div class="card-actions">' +
+                '<button class="btn-icon" onclick="event.stopPropagation(); openEditModal(' + rec.rowIndex + ', this.closest(\'.record-card\'))" title="編集">' +
+                  '<span class="material-icons-outlined">edit</span>' +
+                '</button>' +
+                '<button class="btn-icon delete" onclick="event.stopPropagation(); currentEditRowIndex=' + rec.rowIndex + '; confirmDelete()" title="削除">' +
+                  '<span class="material-icons-outlined">delete</span>' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // ============ HTML Escape ============
+    function escapeHtml(str) {
+      if (!str) return '';
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ============ Edit Modal ============
+    function openEditModal(rowIndex, cardElement) {
+      var rec = JSON.parse(cardElement.getAttribute('data-row'));
+      currentEditRowIndex = rec.rowIndex;
+
+      document.getElementById('edit-rowIndex').value = rec.rowIndex;
+      document.getElementById('edit-name').value = rec.name;
+      document.getElementById('edit-department').value = rec.department;
+      document.getElementById('edit-position').value = rec.position;
+      document.getElementById('edit-destination').value = rec.destination;
+      document.getElementById('edit-date').value = formatDateForInput(rec.date);
+      document.getElementById('edit-district').value = rec.district;
+      document.getElementById('edit-transportCost').value = rec.transportCost;
+      document.getElementById('edit-otherCost').value = rec.otherCost;
+
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+      currentEditRowIndex = null;
+    }
+
+    // ============ Update Record ============
+    function handleUpdate() {
+      var editForm = document.getElementById('editForm');
+      if (!editForm.checkValidity()) {
+        editForm.reportValidity();
+        return;
+      }
+
+      var btnSave = document.getElementById('btn-modal-save');
+      var btnDelete = document.getElementById('btn-modal-delete');
+      btnSave.disabled = true;
+      btnDelete.disabled = true;
+      btnSave.textContent = '保存中...';
+
+      var rowIndex = Number(document.getElementById('edit-rowIndex').value);
+      var formData = {
+        name: document.getElementById('edit-name').value,
+        department: document.getElementById('edit-department').value,
+        position: document.getElementById('edit-position').value,
+        destination: document.getElementById('edit-destination').value,
+        date: document.getElementById('edit-date').value,
+        district: document.getElementById('edit-district').value,
+        transportCost: document.getElementById('edit-transportCost').value,
+        otherCost: document.getElementById('edit-otherCost').value
+      };
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showToast(result.message, 'success');
+          closeEditModal();
+          loadRecords();
+          btnSave.disabled = false;
+          btnDelete.disabled = false;
+          btnSave.innerHTML = '<span class="material-icons-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">save</span> 保存';
+        })
+        .withFailureHandler(function(err) {
+          showToast('エラー: ' + err.message, 'error');
+          btnSave.disabled = false;
+          btnDelete.disabled = false;
+          btnSave.innerHTML = '<span class="material-icons-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">save</span> 保存';
+        })
+        .updateRecord(rowIndex, formData);
+    }
+
+    // ============ Delete Confirm ============
+    function confirmDelete() {
+      document.getElementById('confirmOverlay').classList.add('active');
+    }
+
+    function closeConfirm() {
+      document.getElementById('confirmOverlay').classList.remove('active');
+    }
+
+    function handleDelete() {
+      var btnDel = document.getElementById('btn-confirm-delete');
+      btnDel.disabled = true;
+      btnDel.textContent = '削除中...';
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showToast(result.message, 'success');
+          closeConfirm();
+          closeEditModal();
+          loadRecords();
+          btnDel.disabled = false;
+          btnDel.textContent = '削除する';
+        })
+        .withFailureHandler(function(err) {
+          showToast('エラー: ' + err.message, 'error');
+          btnDel.disabled = false;
+          btnDel.textContent = '削除する';
+        })
+        .deleteRecord(currentEditRowIndex);
+    }
+
+    // ============ Toast Notification ============
+    function showToast(message, type) {
+      var toast = document.getElementById('toast');
+      var icon = type === 'success' ? 'check_circle' : 'error';
+      toast.className = 'toast ' + type;
+      toast.innerHTML = '<span class="material-icons-outlined">' + icon + '</span>' + escapeHtml(message);
+
+      // Trigger reflow for animation
+      toast.offsetHeight;
+      toast.classList.add('show');
+
+      setTimeout(function() {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+
+</body>
+</html>
