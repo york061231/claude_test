@@ -494,6 +494,14 @@ function switchPage(pageId, tabEl) {
 // =====================================================================
 // ユーティリティ
 // =====================================================================
+/** boolean値のロバストな判定（スプレッドシートの型揺れ対策） */
+function toBool(val) {
+  if (val === true || val === 1) return true;
+  if (val === false || val === 0 || val === '' || val === null || val === undefined) return false;
+  if (typeof val === 'string') return val.toLowerCase() === 'true';
+  return !!val;
+}
+
 function run(fn, args, onSuccess, onError) {
   var runner = google.script.run.withSuccessHandler(function(result) {
     if (onSuccess) onSuccess(result);
@@ -587,7 +595,7 @@ function loadEmployeesForProxy() {
     }
     emps.forEach(function(e) {
       if (APP.user.employee && e.employeeId === APP.user.employee.employeeId) return;
-      if (!e.activeFlag) return;
+      if (!toBool(e.activeFlag)) return;
       var opt = document.createElement('option');
       opt.value = e.employeeId;
       opt.textContent = e.name + ' (' + e.dept + ')';
@@ -597,7 +605,7 @@ function loadEmployeesForProxy() {
     var pdfSel = document.getElementById('exportPdfEmployee');
     if (pdfSel) {
       pdfSel.innerHTML = '';
-      emps.filter(function(e) { return e.activeFlag; }).forEach(function(e) {
+      emps.filter(function(e) { return toBool(e.activeFlag); }).forEach(function(e) {
         var opt = document.createElement('option');
         opt.value = e.employeeId;
         opt.textContent = e.name;
@@ -882,7 +890,7 @@ function loadEmployees() {
       html += '<td>' + escHtml(e.dept) + '</td>';
       html += '<td class="text-right">' + yen(e.hourlyWageYen) + '</td>';
       html += '<td class="text-right">' + yen(e.commutePerDayYen) + '</td>';
-      html += '<td>' + (e.activeFlag ? 'Yes' : 'No') + '</td>';
+      html += '<td>' + (toBool(e.activeFlag) ? 'Yes' : 'No') + '</td>';
       html += '<td><button class="btn btn-outline btn-sm" onclick=\'openEmployeeModal(' + JSON.stringify(e).replace(/'/g, "\\'") + ')\'>編集</button></td>';
       html += '</tr>';
     });
@@ -901,7 +909,7 @@ function openEmployeeModal(emp) {
   document.getElementById('empCommute').value = emp ? emp.commutePerDayYen : '';
   document.getElementById('empValidFrom').value = emp ? emp.validFrom : '';
   document.getElementById('empValidTo').value = emp ? emp.validTo : '';
-  document.getElementById('empActive').checked = emp ? emp.activeFlag : true;
+  document.getElementById('empActive').checked = emp ? toBool(emp.activeFlag) : true;
   openModal('employeeModal');
 }
 

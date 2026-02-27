@@ -125,6 +125,14 @@ function deleteSheetRows_(name, keyCol, keyVal) {
   return count;
 }
 
+/** boolean値のロバストな判定（スプレッドシートのセル書式による型揺れ対策） */
+function toBool_(val) {
+  if (val === true || val === 1) return true;
+  if (val === false || val === 0 || val === '' || val === null || val === undefined) return false;
+  if (typeof val === 'string') return val.toLowerCase() === 'true';
+  return !!val;
+}
+
 function now_() {
   return Utilities.formatDate(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ss");
 }
@@ -169,7 +177,7 @@ function getCurrentUser() {
   var email = getCurrentUserEmail_();
   var roles = getSheetData_('Roles').filter(function(r) { return r.email === email; });
   var emp = getSheetData_('Employees').filter(function(e) {
-    return e.email === email && e.activeFlag === true;
+    return e.email === email && toBool_(e.activeFlag);
   });
   var roleNames = roles.map(function(r) { return r.role; });
   return {
@@ -1261,7 +1269,7 @@ function exportPdf(employeeId, periodKey) {
 function exportCsvSummary(periodKey) {
   requireAdmin_();
   var settings = getSettings();
-  var emps = getSheetData_('Employees').filter(function(e) { return e.activeFlag === true; });
+  var emps = getSheetData_('Employees').filter(function(e) { return toBool_(e.activeFlag); });
   var lines = [];
   lines.push(['employeeId', 'name', 'dept', 'periodKey', 'workDays', 'totalWorkMinutes', 'totalTimeDisplay', 'hourlyWage', 'wageYen', 'commutePerDay', 'commuteYen', 'totalYen'].join(','));
 
@@ -1329,7 +1337,7 @@ function exportCsvDetail(periodKey) {
 function exportExcel(periodKey) {
   requireAdmin_();
   var settings = getSettings();
-  var emps = getSheetData_('Employees').filter(function(e) { return e.activeFlag === true; });
+  var emps = getSheetData_('Employees').filter(function(e) { return toBool_(e.activeFlag); });
 
   // 一時スプレッドシート作成
   var tempSS = SpreadsheetApp.create('勤務報告_' + periodKey + '_' + uuid_().substring(0, 6));
@@ -1582,7 +1590,7 @@ function getAdminDashboard(periodKey) {
 /** 全職員の指定期間サマリ */
 function getAllSummaries(periodKey) {
   requireAdmin_();
-  var emps = getSheetData_('Employees').filter(function(e) { return e.activeFlag === true; });
+  var emps = getSheetData_('Employees').filter(function(e) { return toBool_(e.activeFlag); });
   var results = [];
   emps.forEach(function(emp) {
     try {
