@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>勤務申請システム</title>
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --primary-dark: #1557b0;
+      --danger: #d93025;
+      --success: #0d652d;
+      --warning: #e37400;
+      --bg: #f8f9fa;
+      --card-bg: #fff;
+      --border: #dadce0;
+      --text: #202124;
+      --text-secondary: #5f6368;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Segoe UI", "Noto Sans JP", sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+    /* ナビゲーション */
+    .navbar { background: var(--primary); color: #fff; padding: 0 20px; display: flex; align-items: center; height: 48px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+    .navbar h1 { font-size: 16px; font-weight: 500; margin-right: 30px; white-space: nowrap; }
+    .nav-tabs { display: flex; gap: 2px; overflow-x: auto; flex: 1; }
+    .nav-tab { background: none; border: none; color: rgba(255,255,255,0.7); padding: 12px 16px; cursor: pointer; font-size: 13px; white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s; }
+    .nav-tab:hover { color: #fff; background: rgba(255,255,255,0.1); }
+    .nav-tab.active { color: #fff; border-bottom-color: #fff; }
+    .user-info { margin-left: auto; font-size: 12px; white-space: nowrap; padding-left: 16px; }
+
+    /* コンテンツ */
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* カード */
+    .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 16px; }
+    .card h2 { font-size: 16px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .card h3 { font-size: 14px; margin-bottom: 8px; color: var(--text-secondary); }
+
+    /* フォーム */
+    .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; align-items: flex-end; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px; outline: none; transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+    .form-group textarea { min-height: 60px; resize: vertical; }
+
+    /* ボタン */
+    .btn { padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: #b3261e; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { background: #0a5223; }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-warning:hover { background: #c46200; }
+    .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: #f1f3f4; }
+    .btn-sm { padding: 4px 12px; font-size: 12px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* テーブル */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+    th { background: #f1f3f4; font-weight: 500; color: var(--text-secondary); position: sticky; top: 48px; z-index: 1; }
+    tr:hover { background: #f8f9fa; }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+
+    /* バッジ */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+    .badge-draft { background: #e8eaed; color: #5f6368; }
+    .badge-submitted { background: #e8f0fe; color: #1a73e8; }
+    .badge-in-review { background: #fef7e0; color: #e37400; }
+    .badge-returned { background: #fce8e6; color: #d93025; }
+    .badge-approved { background: #e6f4ea; color: #0d652d; }
+    .badge-locked { background: #f3e8fd; color: #7627bb; }
+    .badge-reopened { background: #fff3e0; color: #e65100; }
+
+    /* 集計ボックス */
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 12px 0; }
+    .summary-item { background: #f8f9fa; padding: 12px; border-radius: var(--radius); text-align: center; }
+    .summary-item .label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+    .summary-item .value { font-size: 20px; font-weight: 600; }
+
+    /* モーダル */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: #fff; border-radius: var(--radius); padding: 24px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+    .modal h2 { margin-bottom: 16px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+    /* トースト */
+    .toast-container { position: fixed; top: 60px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 12px 20px; border-radius: var(--radius); color: #fff; font-size: 13px; animation: slideIn 0.3s ease; min-width: 250px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .toast-success { background: var(--success); }
+    .toast-error { background: var(--danger); }
+    .toast-info { background: var(--primary); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ローディング */
+    .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+    .spinner { display: inline-block; width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* レスポンシブ */
+    @media (max-width: 768px) {
+      .form-row { flex-direction: column; }
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .navbar h1 { font-size: 14px; margin-right: 10px; }
+      .nav-tab { padding: 10px 10px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ナビゲーション -->
+<div class="navbar">
+  <h1>勤務申請システム</h1>
+  <div class="nav-tabs" id="navTabs"></div>
+  <div class="user-info" id="userInfo"></div>
+</div>
+
+<!-- トースト -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- メインコンテンツ -->
+<div class="container">
+  <!-- ローディング -->
+  <div id="loadingPage" class="page active"><div class="loading"><div class="spinner"></div><p style="margin-top:12px;">読み込み中...</p></div></div>
+
+  <!-- ===== 勤務入力 ===== -->
+  <div id="pageTimeEntry" class="page">
+    <div class="card">
+      <h2>勤務入力</h2>
+      <div class="form-row">
+        <div class="form-group" id="proxySelectGroup" style="display:none;">
+          <label>対象職員（代理入力）</label>
+          <select id="proxyEmployeeSelect" onchange="onProxyEmployeeChange()"></select>
+        </div>
+        <div class="form-group">
+          <label>対象期間</label>
+          <select id="periodSelect" onchange="loadTimeEntries()"></select>
+        </div>
+        <div class="form-group">
+          <label>期間情報</label>
+          <span id="periodInfo" style="font-size:12px;color:var(--text-secondary);padding:10px 0;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 入力フォーム -->
+    <div class="card">
+      <h3>勤務枠追加・編集</h3>
+      <div class="form-row">
+        <div class="form-group"><label>出社日</label><input type="date" id="entryDate"></div>
+        <div class="form-group"><label>開始</label><input type="time" id="entryStart" step="60"></div>
+        <div class="form-group"><label>終了</label><input type="time" id="entryEnd" step="60"></div>
+        <div class="form-group"><label>休憩(分)</label><input type="number" id="entryBreak" min="0" value="0" style="width:80px;"></div>
+        <div class="form-group" style="justify-content:flex-end;">
+          <button class="btn btn-primary" onclick="saveEntry()">保存</button>
+        </div>
+      </div>
+      <input type="hidden" id="editEntryId" value="">
+      <div id="entryFormMsg" style="font-size:12px;margin-top:4px;"></div>
+    </div>
+
+    <!-- 明細一覧 -->
+    <div class="card">
+      <h3>勤務明細</h3>
+      <div id="entriesTable"></div>
+    </div>
+
+    <!-- 集計 -->
+    <div class="card">
+      <h3>集計</h3>
+      <div class="summary-grid" id="summaryGrid"></div>
+      <div class="btn-group" style="margin-top:12px;">
+        <button class="btn btn-outline" onclick="doSaveDraft()">下書き保存</button>
+        <button class="btn btn-primary" onclick="doSubmit()">提出</button>
+      </div>
+      <div id="submissionStatus" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <!-- ===== 申請一覧 ===== -->
+  <div id="pageMySubmissions" class="page">
+    <div class="card">
+      <h2>申請一覧</h2>
+      <div id="mySubmissionsTable"></div>
+    </div>
+  </div>
+
+  <!-- ===== 承認 ===== -->
+  <div id="pageApprovals" class="page">
+    <div class="card">
+      <h2>承認待ち一覧</h2>
+      <div id="pendingApprovalsTable"></div>
+    </div>
+  </div>
+
+  <!-- ===== 職員管理 ===== -->
+  <div id="pageEmployees" class="page">
+    <div class="card">
+      <h2>職員マスタ管理</h2>
+      <button class="btn btn-primary btn-sm" onclick="openEmployeeModal()" style="margin-bottom:12px;">新規追加</button>
+      <div id="employeesTable"></div>
+    </div>
+  </div>
+
+  <!-- ===== 承認ルート ===== -->
+  <div id="pageRoutes" class="page">
+    <div class="card">
+      <h2>承認ルート設定</h2>
+      <button class="btn btn-primary btn-sm" onclick="openRouteModal()" style="margin-bottom:12px;">新規追加</button>
+      <div id="routesTable"></div>
+    </div>
+  </div>
+
+  <!-- ===== 締め管理 ===== -->
+  <div id="pageClosing" class="page">
+    <div class="card">
+      <h2>締め管理</h2>
+      <div class="form-row">
+        <div class="form-group"><label>対象期間</label><select id="closingPeriodSelect"></select></div>
+        <div class="form-group" style="justify-content:flex-end;">
+          <button class="btn btn-warning" onclick="doLockPeriod()">締め実行</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>申請状況一覧</h3>
+      <div id="closingStatusTable"></div>
+    </div>
+  </div>
+
+  <!-- ===== 出力 ===== -->
+  <div id="pageExport" class="page">
+    <div class="card">
+      <h2>出力</h2>
+      <div class="form-row">
+        <div class="form-group"><label>対象期間</label><select id="exportPeriodSelect"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>個別PDF出力</label><select id="exportPdfEmployee"></select></div>
+        <div class="form-group" style="justify-content:flex-end;"><button class="btn btn-outline" onclick="doExportPdf()">PDF出力</button></div>
+      </div>
+      <hr style="margin:12px 0;">
+      <div class="btn-group">
+        <button class="btn btn-outline" onclick="doExportCsvSummary()">CSV(サマリ)</button>
+        <button class="btn btn-outline" onclick="doExportCsvDetail()">CSV(明細)</button>
+        <button class="btn btn-outline" onclick="doExportExcel()">Excel出力</button>
+      </div>
+      <div id="exportResult" style="margin-top:12px;font-size:13px;"></div>
+    </div>
+  </div>
+
+  <!-- ===== バックアップ ===== -->
+  <div id="pageBackup" class="page">
+    <div class="card">
+      <h2>バックアップ</h2>
+      <div class="btn-group" style="margin-bottom:12px;">
+        <button class="btn btn-primary" onclick="doManualBackup()">手動バックアップ実行</button>
+        <button class="btn btn-outline" onclick="doSetupAutoBackup()">自動バックアップ設定</button>
+      </div>
+      <div id="backupsTable"></div>
+    </div>
+  </div>
+
+  <!-- ===== 監査ログ ===== -->
+  <div id="pageAudit" class="page">
+    <div class="card">
+      <h2>監査ログ</h2>
+      <button class="btn btn-outline btn-sm" onclick="loadAuditLogs()" style="margin-bottom:12px;">更新</button>
+      <div id="auditLogTable" style="overflow-x:auto;"></div>
+    </div>
+  </div>
+
+  <!-- ===== 設定 ===== -->
+  <div id="pageSettings" class="page">
+    <div class="card">
+      <h2>システム設定</h2>
+      <div id="settingsForm"></div>
+      <button class="btn btn-primary" onclick="doSaveSettings()" style="margin-top:12px;">設定保存</button>
+    </div>
+    <div class="card">
+      <h2>ロール管理</h2>
+      <button class="btn btn-primary btn-sm" onclick="openRoleModal()" style="margin-bottom:12px;">新規追加</button>
+      <div id="rolesTable"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== モーダル: 職員編集 ===== -->
+<div class="modal-overlay" id="employeeModal">
+  <div class="modal">
+    <h2 id="employeeModalTitle">職員追加</h2>
+    <input type="hidden" id="empEditId">
+    <div class="form-row"><div class="form-group" style="flex:1;"><label>メール</label><input type="email" id="empEmail" style="width:100%;"></div></div>
+    <div class="form-row"><div class="form-group" style="flex:1;"><label>氏名</label><input type="text" id="empName" style="width:100%;"></div></div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1;"><label>所属</label><input type="text" id="empDept" style="width:100%;"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>時給(円)</label><input type="number" id="empWage" min="0"></div>
+      <div class="form-group"><label>交通費(円/日)</label><input type="number" id="empCommute" min="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>有効開始</label><input type="date" id="empValidFrom"></div>
+      <div class="form-group"><label>有効終了</label><input type="date" id="empValidTo"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label><input type="checkbox" id="empActive" checked> 有効</label></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('employeeModal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="doSaveEmployee()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== モーダル: 承認ルート編集 ===== -->
+<div class="modal-overlay" id="routeModal">
+  <div class="modal">
+    <h2 id="routeModalTitle">承認ルート追加</h2>
+    <input type="hidden" id="routeEditId">
+    <div class="form-row">
+      <div class="form-group"><label>スコープ</label>
+        <select id="routeScope"><option value="DEPT">部署</option><option value="EMPLOYEE">職員</option></select>
+      </div>
+      <div class="form-group" style="flex:1;"><label>スコープキー(部署名 or 職員ID)</label><input type="text" id="routeScopeKey" style="width:100%;"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>ステップNo (1-10)</label><input type="number" id="routeStep" min="1" max="10"></div>
+      <div class="form-group" style="flex:1;"><label>承認者メール</label><input type="email" id="routeApprover" style="width:100%;"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label><input type="checkbox" id="routeEnabled" checked> 有効</label></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('routeModal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="doSaveRoute()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== モーダル: ロール編集 ===== -->
+<div class="modal-overlay" id="roleModal">
+  <div class="modal">
+    <h2>ロール追加</h2>
+    <div class="form-row">
+      <div class="form-group" style="flex:1;"><label>メール</label><input type="email" id="roleEmail" style="width:100%;"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>ロール</label>
+        <select id="roleRole"><option value="ADMIN">ADMIN</option><option value="APPROVER">APPROVER</option><option value="CLERK">CLERK</option></select>
+      </div>
+      <div class="form-group" style="flex:1;"><label>部署(任意)</label><input type="text" id="roleDept" style="width:100%;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('roleModal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="doSaveRole()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== モーダル: 承認詳細 ===== -->
+<div class="modal-overlay" id="approvalDetailModal">
+  <div class="modal" style="max-width:800px;">
+    <h2>申請詳細</h2>
+    <div id="approvalDetailContent"></div>
+    <div class="form-row" style="margin-top:16px;">
+      <div class="form-group" style="flex:1;"><label>コメント</label><textarea id="approvalComment" style="width:100%;"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('approvalDetailModal')">閉じる</button>
+      <button class="btn btn-danger" onclick="doReturnSubmission()">差戻し</button>
+      <button class="btn btn-success" onclick="doApproveSubmission()">承認</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== モーダル: 再締め解除 ===== -->
+<div class="modal-overlay" id="reopenModal">
+  <div class="modal">
+    <h2>ロック解除</h2>
+    <input type="hidden" id="reopenSubmissionId">
+    <div class="form-group" style="width:100%;"><label>解除理由（必須）</label><textarea id="reopenReason" style="width:100%;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('reopenModal')">キャンセル</button>
+      <button class="btn btn-warning" onclick="doReopenSubmission()">解除実行</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// グローバル状態
+// =====================================================================
+var APP = {
+  user: null,
+  periods: [],
+  currentSubmissionId: null, // 承認詳細用
+  employees: []
+};
+
+// =====================================================================
+// 初期化
+// =====================================================================
+function initApp() {
+  run('getCurrentUser', [], function(user) {
+    APP.user = user;
+    document.getElementById('userInfo').textContent = user.email + (user.isAdmin ? ' [管理者]' : user.isApprover ? ' [承認者]' : '');
+    setupNavigation();
+    run('getAvailablePeriods', [], function(periods) {
+      APP.periods = periods;
+      populatePeriodSelects();
+      if (user.isAdmin) {
+        loadEmployeesForProxy();
+      }
+      document.getElementById('loadingPage').classList.remove('active');
+      // 初期タブ
+      var firstTab = document.querySelector('.nav-tab');
+      if (firstTab) firstTab.click();
+    });
+  });
+}
+
+function setupNavigation() {
+  var tabs = document.getElementById('navTabs');
+  tabs.innerHTML = '';
+  var u = APP.user;
+  var pages = [];
+
+  // 職員なら勤務入力と申請一覧
+  if (u.employee || u.isAdmin) {
+    pages.push({ id: 'pageTimeEntry', label: '勤務入力' });
+  }
+  if (u.employee) {
+    pages.push({ id: 'pageMySubmissions', label: '申請一覧' });
+  }
+  if (u.isApprover) {
+    pages.push({ id: 'pageApprovals', label: '承認待ち' });
+  }
+  if (u.isAdmin) {
+    pages.push({ id: 'pageEmployees', label: '職員管理' });
+    pages.push({ id: 'pageRoutes', label: '承認ルート' });
+    pages.push({ id: 'pageClosing', label: '締め管理' });
+    pages.push({ id: 'pageExport', label: '出力' });
+    pages.push({ id: 'pageBackup', label: 'バックアップ' });
+    pages.push({ id: 'pageAudit', label: '監査ログ' });
+    pages.push({ id: 'pageSettings', label: '設定' });
+  }
+
+  pages.forEach(function(p) {
+    var btn = document.createElement('button');
+    btn.className = 'nav-tab';
+    btn.textContent = p.label;
+    btn.dataset.page = p.id;
+    btn.onclick = function() { switchPage(p.id, btn); };
+    tabs.appendChild(btn);
+  });
+}
+
+function switchPage(pageId, tabEl) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+  var page = document.getElementById(pageId);
+  if (page) page.classList.add('active');
+  if (tabEl) tabEl.classList.add('active');
+
+  // ページ表示時にデータロード
+  switch (pageId) {
+    case 'pageTimeEntry': loadTimeEntries(); break;
+    case 'pageMySubmissions': loadMySubmissions(); break;
+    case 'pageApprovals': loadPendingApprovals(); break;
+    case 'pageEmployees': loadEmployees(); break;
+    case 'pageRoutes': loadRoutes(); break;
+    case 'pageClosing': loadClosingStatus(); break;
+    case 'pageExport': loadExportPage(); break;
+    case 'pageBackup': loadBackups(); break;
+    case 'pageAudit': loadAuditLogs(); break;
+    case 'pageSettings': loadSettings(); break;
+  }
+}
+
+// =====================================================================
+// ユーティリティ
+// =====================================================================
+function run(fn, args, onSuccess, onError) {
+  var runner = google.script.run.withSuccessHandler(function(result) {
+    if (onSuccess) onSuccess(result);
+  }).withFailureHandler(function(err) {
+    if (onError) { onError(err); }
+    else { toast(err.message || 'エラーが発生しました', 'error'); }
+  });
+  runner[fn].apply(runner, args);
+}
+
+function toast(msg, type) {
+  var container = document.getElementById('toastContainer');
+  var el = document.createElement('div');
+  el.className = 'toast toast-' + (type || 'info');
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(function() { el.remove(); }, 4000);
+}
+
+function statusBadge(status) {
+  var cls = 'badge badge-' + (status || 'draft').toLowerCase().replace('_', '-');
+  var labels = { DRAFT:'下書き', SUBMITTED:'提出済', IN_REVIEW:'承認中', RETURNED:'差戻し', APPROVED:'承認済', LOCKED:'締め済', REOPENED:'再開' };
+  return '<span class="' + cls + '">' + (labels[status] || status || '-') + '</span>';
+}
+
+function yen(n) { return '¥' + Number(n || 0).toLocaleString(); }
+
+function escHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+
+function populatePeriodSelects() {
+  var selects = ['periodSelect', 'closingPeriodSelect', 'exportPeriodSelect'];
+  selects.forEach(function(sid) {
+    var sel = document.getElementById(sid);
+    if (!sel) return;
+    sel.innerHTML = '';
+    APP.periods.forEach(function(p) {
+      var opt = document.createElement('option');
+      opt.value = p.periodKey;
+      opt.textContent = p.periodKey + ' (' + p.startDate + ' ～ ' + p.endDate + ')';
+      sel.appendChild(opt);
+    });
+    // デフォルトで現在に近い期間を選択
+    var now = new Date();
+    var currentKey = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2);
+    if (sel.querySelector('option[value="' + currentKey + '"]')) {
+      sel.value = currentKey;
+    }
+  });
+}
+
+function getSelectedEmployeeId() {
+  if (APP.user.isAdmin) {
+    var proxy = document.getElementById('proxyEmployeeSelect');
+    if (proxy && proxy.value) return proxy.value;
+  }
+  return APP.user.employee ? APP.user.employee.employeeId : null;
+}
+
+function getSelectedPeriodKey() {
+  return document.getElementById('periodSelect').value;
+}
+
+// =====================================================================
+// 代理入力用: 職員セレクト
+// =====================================================================
+function loadEmployeesForProxy() {
+  if (!APP.user.isAdmin) return;
+  run('getEmployees', [], function(emps) {
+    APP.employees = emps;
+    var group = document.getElementById('proxySelectGroup');
+    group.style.display = '';
+    var sel = document.getElementById('proxyEmployeeSelect');
+    sel.innerHTML = '';
+    // 自分が職員なら自分をデフォルト
+    if (APP.user.employee) {
+      var myOpt = document.createElement('option');
+      myOpt.value = APP.user.employee.employeeId;
+      myOpt.textContent = APP.user.employee.name + '（自分）';
+      sel.appendChild(myOpt);
+    }
+    emps.forEach(function(e) {
+      if (APP.user.employee && e.employeeId === APP.user.employee.employeeId) return;
+      if (!e.activeFlag) return;
+      var opt = document.createElement('option');
+      opt.value = e.employeeId;
+      opt.textContent = e.name + ' (' + e.dept + ')';
+      sel.appendChild(opt);
+    });
+    // PDF出力の職員セレクトにも
+    var pdfSel = document.getElementById('exportPdfEmployee');
+    if (pdfSel) {
+      pdfSel.innerHTML = '';
+      emps.filter(function(e) { return e.activeFlag; }).forEach(function(e) {
+        var opt = document.createElement('option');
+        opt.value = e.employeeId;
+        opt.textContent = e.name;
+        pdfSel.appendChild(opt);
+      });
+    }
+  });
+}
+
+function onProxyEmployeeChange() {
+  loadTimeEntries();
+}
+
+// =====================================================================
+// 勤務入力ページ
+// =====================================================================
+function loadTimeEntries() {
+  var empId = getSelectedEmployeeId();
+  var periodKey = getSelectedPeriodKey();
+  if (!empId || !periodKey) return;
+
+  // 期間情報表示
+  var sel = document.getElementById('periodSelect');
+  var opt = sel.options[sel.selectedIndex];
+  document.getElementById('periodInfo').textContent = opt ? opt.textContent : '';
+
+  run('getTimeEntries', [empId, periodKey], function(entries) {
+    renderEntriesTable(entries);
+  });
+
+  // 集計取得
+  run('calculateSummary', [empId, periodKey], function(summary) {
+    renderSummary(summary);
+  });
+
+  // 申請ステータス
+  run('getSubmission', [empId, periodKey], function(sub) {
+    var el = document.getElementById('submissionStatus');
+    if (sub) {
+      el.innerHTML = '申請ステータス: ' + statusBadge(sub.status);
+      // 差戻しの場合はコメント表示
+      if (sub.status === 'RETURNED') {
+        run('getApprovalActions', [sub.submissionId], function(actions) {
+          var returns = actions.filter(function(a) { return a.action === 'RETURN'; });
+          if (returns.length > 0) {
+            var last = returns[returns.length - 1];
+            el.innerHTML += '<div style="color:var(--danger);margin-top:4px;font-size:12px;">差戻し理由: ' + escHtml(last.comment) + '</div>';
+          }
+        });
+      }
+    } else {
+      el.innerHTML = '申請ステータス: <span class="badge badge-draft">未作成</span>';
+    }
+  });
+
+  // 入力フォームリセット
+  clearEntryForm();
+}
+
+function renderEntriesTable(entries) {
+  entries.sort(function(a, b) {
+    return (a.workDate + a.startTime).localeCompare(b.workDate + b.startTime);
+  });
+  var html = '<table><thead><tr><th>日付</th><th>開始</th><th>終了</th><th>休憩(分)</th><th>勤務(分)</th><th>操作</th></tr></thead><tbody>';
+  if (entries.length === 0) {
+    html += '<tr><td colspan="6" class="text-center">勤務明細がありません</td></tr>';
+  }
+  entries.forEach(function(e) {
+    html += '<tr>';
+    html += '<td>' + escHtml(e.workDate) + '</td>';
+    html += '<td>' + escHtml(e.startTime) + '</td>';
+    html += '<td>' + escHtml(e.endTime) + '</td>';
+    html += '<td class="text-right">' + e.breakMin + '</td>';
+    html += '<td class="text-right">' + e.workMinutes + '</td>';
+    html += '<td><button class="btn btn-outline btn-sm" onclick="editEntry(\'' + e.entryId + '\',\'' + e.workDate + '\',\'' + e.startTime + '\',\'' + e.endTime + '\',' + e.breakMin + ')">編集</button> ';
+    html += '<button class="btn btn-danger btn-sm" onclick="doDeleteEntry(\'' + e.entryId + '\')">削除</button></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('entriesTable').innerHTML = html;
+}
+
+function renderSummary(s) {
+  var grid = document.getElementById('summaryGrid');
+  grid.innerHTML =
+    '<div class="summary-item"><div class="label">出社日数</div><div class="value">' + s.workDays + ' 日</div></div>' +
+    '<div class="summary-item"><div class="label">総勤務時間</div><div class="value">' + s.totalTimeDisplay + '</div></div>' +
+    '<div class="summary-item"><div class="label">給与</div><div class="value">' + yen(s.wageYen) + '</div></div>' +
+    '<div class="summary-item"><div class="label">交通費</div><div class="value">' + yen(s.commuteYen) + '</div></div>' +
+    '<div class="summary-item"><div class="label">総支給額</div><div class="value" style="color:var(--primary);">' + yen(s.totalYen) + '</div></div>';
+}
+
+function clearEntryForm() {
+  document.getElementById('editEntryId').value = '';
+  document.getElementById('entryDate').value = '';
+  document.getElementById('entryStart').value = '';
+  document.getElementById('entryEnd').value = '';
+  document.getElementById('entryBreak').value = '0';
+  document.getElementById('entryFormMsg').textContent = '';
+}
+
+function editEntry(id, date, start, end, breakMin) {
+  document.getElementById('editEntryId').value = id;
+  document.getElementById('entryDate').value = date;
+  document.getElementById('entryStart').value = start;
+  document.getElementById('entryEnd').value = end;
+  document.getElementById('entryBreak').value = breakMin;
+  document.getElementById('entryFormMsg').innerHTML = '<span style="color:var(--warning);">編集中: ' + date + ' ' + start + '-' + end + ' <a href="#" onclick="clearEntryForm();return false;">キャンセル</a></span>';
+}
+
+function saveEntry() {
+  var data = {
+    entryId: document.getElementById('editEntryId').value || null,
+    employeeId: getSelectedEmployeeId(),
+    workDate: document.getElementById('entryDate').value,
+    startTime: document.getElementById('entryStart').value,
+    endTime: document.getElementById('entryEnd').value,
+    breakMin: parseInt(document.getElementById('entryBreak').value, 10) || 0,
+    periodKey: getSelectedPeriodKey()
+  };
+  if (!data.employeeId) { toast('職員を選択してください', 'error'); return; }
+  run('saveTimeEntry', [data], function(result) {
+    toast('保存しました', 'success');
+    loadTimeEntries();
+  });
+}
+
+function doDeleteEntry(entryId) {
+  if (!confirm('この明細を削除しますか？')) return;
+  run('deleteTimeEntry', [entryId], function() {
+    toast('削除しました', 'success');
+    loadTimeEntries();
+  });
+}
+
+function doSaveDraft() {
+  var empId = getSelectedEmployeeId();
+  var pk = getSelectedPeriodKey();
+  if (!empId) { toast('職員を選択してください', 'error'); return; }
+  run('saveDraft', [empId, pk], function() {
+    toast('下書き保存しました', 'success');
+    loadTimeEntries();
+  });
+}
+
+function doSubmit() {
+  var empId = getSelectedEmployeeId();
+  var pk = getSelectedPeriodKey();
+  if (!empId) { toast('職員を選択してください', 'error'); return; }
+  if (!confirm('この期間の勤務申請を提出しますか？')) return;
+  run('submitForApproval', [empId, pk], function() {
+    toast('提出しました', 'success');
+    loadTimeEntries();
+  });
+}
+
+// =====================================================================
+// 申請一覧ページ
+// =====================================================================
+function loadMySubmissions() {
+  run('getMySubmissions', [], function(subs) {
+    subs.sort(function(a, b) { return b.periodKey.localeCompare(a.periodKey); });
+    var html = '<table><thead><tr><th>期間</th><th>ステータス</th><th>勤務分</th><th>出社日数</th><th>給与</th><th>交通費</th><th>総支給</th></tr></thead><tbody>';
+    if (subs.length === 0) html += '<tr><td colspan="7" class="text-center">申請がありません</td></tr>';
+    subs.forEach(function(s) {
+      html += '<tr>';
+      html += '<td>' + escHtml(s.periodKey) + '</td>';
+      html += '<td>' + statusBadge(s.status) + '</td>';
+      html += '<td class="text-right">' + (s.totalWorkMinutes || 0) + '</td>';
+      html += '<td class="text-right">' + (s.workDays || 0) + '</td>';
+      html += '<td class="text-right">' + yen(s.wageYen) + '</td>';
+      html += '<td class="text-right">' + yen(s.commuteYen) + '</td>';
+      html += '<td class="text-right">' + yen(s.totalYen) + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('mySubmissionsTable').innerHTML = html;
+  });
+}
+
+// =====================================================================
+// 承認ページ
+// =====================================================================
+function loadPendingApprovals() {
+  run('getMyPendingApprovals', [], function(items) {
+    var html = '<table><thead><tr><th>職員</th><th>所属</th><th>期間</th><th>ステータス</th><th>ステップ</th><th>総支給</th><th>操作</th></tr></thead><tbody>';
+    if (items.length === 0) html += '<tr><td colspan="7" class="text-center">承認待ちの申請はありません</td></tr>';
+    items.forEach(function(item) {
+      var s = item.submission;
+      var e = item.employee;
+      html += '<tr>';
+      html += '<td>' + escHtml(e ? e.name : s.employeeId) + '</td>';
+      html += '<td>' + escHtml(e ? e.dept : '') + '</td>';
+      html += '<td>' + escHtml(s.periodKey) + '</td>';
+      html += '<td>' + statusBadge(s.status) + '</td>';
+      html += '<td>' + item.currentStep + '/' + item.totalSteps + '</td>';
+      html += '<td class="text-right">' + yen(s.totalYen) + '</td>';
+      html += '<td><button class="btn btn-primary btn-sm" onclick="openApprovalDetail(\'' + s.submissionId + '\',\'' + s.employeeId + '\',\'' + s.periodKey + '\')">詳細</button></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('pendingApprovalsTable').innerHTML = html;
+  });
+}
+
+function openApprovalDetail(subId, empId, periodKey) {
+  APP.currentSubmissionId = subId;
+  var content = document.getElementById('approvalDetailContent');
+  content.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  document.getElementById('approvalComment').value = '';
+  openModal('approvalDetailModal');
+
+  run('calculateSummary', [empId, periodKey], function(summary) {
+    var emp = getEmployeeById(empId);
+    var html = '';
+    html += '<div class="summary-grid">';
+    html += '<div class="summary-item"><div class="label">職員</div><div class="value" style="font-size:14px;">' + (emp ? escHtml(emp.name) : empId) + '</div></div>';
+    html += '<div class="summary-item"><div class="label">期間</div><div class="value" style="font-size:14px;">' + periodKey + '</div></div>';
+    html += '<div class="summary-item"><div class="label">出社日数</div><div class="value">' + summary.workDays + '</div></div>';
+    html += '<div class="summary-item"><div class="label">総勤務</div><div class="value">' + summary.totalTimeDisplay + '</div></div>';
+    html += '<div class="summary-item"><div class="label">給与</div><div class="value">' + yen(summary.wageYen) + '</div></div>';
+    html += '<div class="summary-item"><div class="label">総支給</div><div class="value">' + yen(summary.totalYen) + '</div></div>';
+    html += '</div>';
+
+    // 明細
+    var entries = summary.entries.slice().sort(function(a, b) { return (a.workDate + a.startTime).localeCompare(b.workDate + b.startTime); });
+    html += '<table style="margin-top:12px;"><thead><tr><th>日付</th><th>開始</th><th>終了</th><th>休憩</th><th>勤務分</th></tr></thead><tbody>';
+    entries.forEach(function(e) {
+      html += '<tr><td>' + e.workDate + '</td><td>' + e.startTime + '</td><td>' + e.endTime + '</td><td>' + e.breakMin + '</td><td>' + e.workMinutes + '</td></tr>';
+    });
+    html += '</tbody></table>';
+
+    // コメント履歴
+    run('getApprovalActions', [subId], function(actions) {
+      if (actions.length > 0) {
+        html += '<h3 style="margin-top:12px;">承認履歴</h3><table><thead><tr><th>ステップ</th><th>承認者</th><th>アクション</th><th>コメント</th><th>日時</th></tr></thead><tbody>';
+        actions.forEach(function(a) {
+          html += '<tr><td>' + a.stepNo + '</td><td>' + escHtml(a.actorEmail) + '</td><td>' + a.action + '</td><td>' + escHtml(a.comment) + '</td><td>' + a.actionAt + '</td></tr>';
+        });
+        html += '</tbody></table>';
+      }
+      content.innerHTML = html;
+    });
+  });
+}
+
+function getEmployeeById(id) {
+  return APP.employees.filter(function(e) { return e.employeeId === id; })[0] || null;
+}
+
+function doApproveSubmission() {
+  var comment = document.getElementById('approvalComment').value;
+  run('approveSubmission', [APP.currentSubmissionId, comment], function() {
+    toast('承認しました', 'success');
+    closeModal('approvalDetailModal');
+    loadPendingApprovals();
+  });
+}
+
+function doReturnSubmission() {
+  var comment = document.getElementById('approvalComment').value;
+  if (!comment.trim()) { toast('差戻しにはコメントが必須です', 'error'); return; }
+  run('returnSubmission', [APP.currentSubmissionId, comment], function() {
+    toast('差戻ししました', 'success');
+    closeModal('approvalDetailModal');
+    loadPendingApprovals();
+  });
+}
+
+// =====================================================================
+// 職員管理ページ
+// =====================================================================
+function loadEmployees() {
+  run('getEmployees', [], function(emps) {
+    APP.employees = emps;
+    var html = '<table><thead><tr><th>ID</th><th>氏名</th><th>メール</th><th>所属</th><th>時給</th><th>交通費</th><th>有効</th><th>操作</th></tr></thead><tbody>';
+    emps.forEach(function(e) {
+      html += '<tr>';
+      html += '<td>' + escHtml(e.employeeId) + '</td>';
+      html += '<td>' + escHtml(e.name) + '</td>';
+      html += '<td>' + escHtml(e.email) + '</td>';
+      html += '<td>' + escHtml(e.dept) + '</td>';
+      html += '<td class="text-right">' + yen(e.hourlyWageYen) + '</td>';
+      html += '<td class="text-right">' + yen(e.commutePerDayYen) + '</td>';
+      html += '<td>' + (e.activeFlag ? 'Yes' : 'No') + '</td>';
+      html += '<td><button class="btn btn-outline btn-sm" onclick=\'openEmployeeModal(' + JSON.stringify(e).replace(/'/g, "\\'") + ')\'>編集</button></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('employeesTable').innerHTML = html;
+  });
+}
+
+function openEmployeeModal(emp) {
+  document.getElementById('employeeModalTitle').textContent = emp ? '職員編集' : '職員追加';
+  document.getElementById('empEditId').value = emp ? emp.employeeId : '';
+  document.getElementById('empEmail').value = emp ? emp.email : '';
+  document.getElementById('empName').value = emp ? emp.name : '';
+  document.getElementById('empDept').value = emp ? emp.dept : '';
+  document.getElementById('empWage').value = emp ? emp.hourlyWageYen : '';
+  document.getElementById('empCommute').value = emp ? emp.commutePerDayYen : '';
+  document.getElementById('empValidFrom').value = emp ? emp.validFrom : '';
+  document.getElementById('empValidTo').value = emp ? emp.validTo : '';
+  document.getElementById('empActive').checked = emp ? emp.activeFlag : true;
+  openModal('employeeModal');
+}
+
+function doSaveEmployee() {
+  var data = {
+    employeeId: document.getElementById('empEditId').value || null,
+    email: document.getElementById('empEmail').value,
+    name: document.getElementById('empName').value,
+    dept: document.getElementById('empDept').value,
+    hourlyWageYen: parseInt(document.getElementById('empWage').value, 10) || 0,
+    commutePerDayYen: parseInt(document.getElementById('empCommute').value, 10) || 0,
+    validFrom: document.getElementById('empValidFrom').value,
+    validTo: document.getElementById('empValidTo').value,
+    activeFlag: document.getElementById('empActive').checked
+  };
+  if (!data.email || !data.name) { toast('メールと氏名は必須です', 'error'); return; }
+  run('saveEmployee', [data], function() {
+    toast('保存しました', 'success');
+    closeModal('employeeModal');
+    loadEmployees();
+    loadEmployeesForProxy();
+  });
+}
+
+// =====================================================================
+// 承認ルートページ
+// =====================================================================
+function loadRoutes() {
+  run('getApprovalRoutes', [], function(routes) {
+    routes.sort(function(a, b) {
+      var c = a.scopeKey.localeCompare(b.scopeKey);
+      return c !== 0 ? c : a.stepNo - b.stepNo;
+    });
+    var html = '<table><thead><tr><th>スコープ</th><th>キー</th><th>ステップ</th><th>承認者</th><th>有効</th><th>操作</th></tr></thead><tbody>';
+    routes.forEach(function(r) {
+      html += '<tr>';
+      html += '<td>' + escHtml(r.scope) + '</td>';
+      html += '<td>' + escHtml(r.scopeKey) + '</td>';
+      html += '<td>' + r.stepNo + '</td>';
+      html += '<td>' + escHtml(r.approverEmail) + '</td>';
+      html += '<td>' + (r.enabled ? 'Yes' : 'No') + '</td>';
+      html += '<td><button class="btn btn-outline btn-sm" onclick=\'openRouteModal(' + JSON.stringify(r).replace(/'/g, "\\'") + ')\'>編集</button> ';
+      html += '<button class="btn btn-danger btn-sm" onclick="doDeleteRoute(\'' + r.routeId + '\')">削除</button></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('routesTable').innerHTML = html;
+  });
+}
+
+function openRouteModal(r) {
+  document.getElementById('routeModalTitle').textContent = r ? '承認ルート編集' : '承認ルート追加';
+  document.getElementById('routeEditId').value = r ? r.routeId : '';
+  document.getElementById('routeScope').value = r ? r.scope : 'DEPT';
+  document.getElementById('routeScopeKey').value = r ? r.scopeKey : '';
+  document.getElementById('routeStep').value = r ? r.stepNo : '';
+  document.getElementById('routeApprover').value = r ? r.approverEmail : '';
+  document.getElementById('routeEnabled').checked = r ? r.enabled : true;
+  openModal('routeModal');
+}
+
+function doSaveRoute() {
+  var data = {
+    routeId: document.getElementById('routeEditId').value || null,
+    scope: document.getElementById('routeScope').value,
+    scopeKey: document.getElementById('routeScopeKey').value,
+    stepNo: parseInt(document.getElementById('routeStep').value, 10),
+    approverEmail: document.getElementById('routeApprover').value,
+    enabled: document.getElementById('routeEnabled').checked
+  };
+  if (!data.scopeKey || !data.stepNo || !data.approverEmail) { toast('すべての項目を入力してください', 'error'); return; }
+  if (data.stepNo < 1 || data.stepNo > 10) { toast('ステップは1〜10の範囲で指定してください', 'error'); return; }
+  run('saveApprovalRoute', [data], function() {
+    toast('保存しました', 'success');
+    closeModal('routeModal');
+    loadRoutes();
+  });
+}
+
+function doDeleteRoute(routeId) {
+  if (!confirm('この承認ルートを削除しますか？')) return;
+  run('deleteApprovalRoute', [routeId], function() {
+    toast('削除しました', 'success');
+    loadRoutes();
+  });
+}
+
+// =====================================================================
+// 締め管理ページ
+// =====================================================================
+function loadClosingStatus() {
+  var pk = document.getElementById('closingPeriodSelect').value;
+  if (!pk) return;
+  run('getAllSummaries', [pk], function(items) {
+    var html = '<table><thead><tr><th>職員</th><th>所属</th><th>ステータス</th><th>勤務分</th><th>出社日数</th><th>総支給</th><th>操作</th></tr></thead><tbody>';
+    items.forEach(function(item) {
+      var emp = item.employee;
+      var sub = item.submission;
+      var sum = item.summary;
+      html += '<tr>';
+      html += '<td>' + escHtml(emp.name) + '</td>';
+      html += '<td>' + escHtml(emp.dept) + '</td>';
+      html += '<td>' + (sub ? statusBadge(sub.status) : '<span class="badge badge-draft">未作成</span>') + '</td>';
+      html += '<td class="text-right">' + (sum ? sum.totalWorkMinutes : 0) + '</td>';
+      html += '<td class="text-right">' + (sum ? sum.workDays : 0) + '</td>';
+      html += '<td class="text-right">' + (sum ? yen(sum.totalYen) : yen(0)) + '</td>';
+      html += '<td>';
+      if (sub && sub.status === 'LOCKED') {
+        html += '<button class="btn btn-warning btn-sm" onclick="openReopenModal(\'' + sub.submissionId + '\')">解除</button>';
+      } else if (sub && (sub.status === 'APPROVED' || sub.status === 'REOPENED')) {
+        html += '<button class="btn btn-outline btn-sm" onclick="doRelockSubmission(\'' + sub.submissionId + '\')">再ロック</button>';
+      }
+      html += '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('closingStatusTable').innerHTML = html;
+  });
+}
+
+function doLockPeriod() {
+  var pk = document.getElementById('closingPeriodSelect').value;
+  if (!confirm(pk + ' の締めを実行しますか？\nAPPROVED状態の申請がLOCKEDになります。')) return;
+  run('lockPeriod', [pk], function(result) {
+    toast(result.lockedCount + '件の申請を締めました', 'success');
+    loadClosingStatus();
+  });
+}
+
+function openReopenModal(subId) {
+  document.getElementById('reopenSubmissionId').value = subId;
+  document.getElementById('reopenReason').value = '';
+  openModal('reopenModal');
+}
+
+function doReopenSubmission() {
+  var subId = document.getElementById('reopenSubmissionId').value;
+  var reason = document.getElementById('reopenReason').value;
+  if (!reason.trim()) { toast('解除理由は必須です', 'error'); return; }
+  run('reopenSubmission', [subId, reason], function() {
+    toast('ロックを解除しました', 'success');
+    closeModal('reopenModal');
+    loadClosingStatus();
+  });
+}
+
+function doRelockSubmission(subId) {
+  if (!confirm('再ロックしますか？')) return;
+  run('relockSubmission', [subId], function() {
+    toast('再ロックしました', 'success');
+    loadClosingStatus();
+  });
+}
+
+// =====================================================================
+// 出力ページ
+// =====================================================================
+function loadExportPage() {
+  // PDF用職員セレクト更新
+  if (APP.employees.length === 0 && APP.user.isAdmin) {
+    loadEmployeesForProxy();
+  }
+}
+
+function doExportPdf() {
+  var pk = document.getElementById('exportPeriodSelect').value;
+  var empId = document.getElementById('exportPdfEmployee').value;
+  if (!empId) { toast('職員を選択してください', 'error'); return; }
+  document.getElementById('exportResult').innerHTML = '<div class="loading"><div class="spinner"></div> PDF生成中...</div>';
+  run('exportPdf', [empId, pk], function(result) {
+    document.getElementById('exportResult').innerHTML = 'PDF生成完了: <a href="' + result.url + '" target="_blank">' + escHtml(result.name) + '</a>';
+    toast('PDF出力完了', 'success');
+  }, function(err) {
+    document.getElementById('exportResult').innerHTML = '';
+    toast(err.message, 'error');
+  });
+}
+
+function doExportCsvSummary() {
+  var pk = document.getElementById('exportPeriodSelect').value;
+  document.getElementById('exportResult').innerHTML = '<div class="loading"><div class="spinner"></div> CSV生成中...</div>';
+  run('exportCsvSummary', [pk], function(result) {
+    document.getElementById('exportResult').innerHTML = 'CSVサマリ生成完了: <a href="' + result.url + '" target="_blank">' + escHtml(result.name) + '</a>';
+    toast('CSV(サマリ)出力完了', 'success');
+  });
+}
+
+function doExportCsvDetail() {
+  var pk = document.getElementById('exportPeriodSelect').value;
+  document.getElementById('exportResult').innerHTML = '<div class="loading"><div class="spinner"></div> CSV生成中...</div>';
+  run('exportCsvDetail', [pk], function(result) {
+    document.getElementById('exportResult').innerHTML = 'CSV明細生成完了: <a href="' + result.url + '" target="_blank">' + escHtml(result.name) + '</a>';
+    toast('CSV(明細)出力完了', 'success');
+  });
+}
+
+function doExportExcel() {
+  var pk = document.getElementById('exportPeriodSelect').value;
+  document.getElementById('exportResult').innerHTML = '<div class="loading"><div class="spinner"></div> Excel生成中...</div>';
+  run('exportExcel', [pk], function(result) {
+    document.getElementById('exportResult').innerHTML = 'Excel生成完了: <a href="' + result.url + '" target="_blank">' + escHtml(result.name) + '</a>';
+    toast('Excel出力完了', 'success');
+  });
+}
+
+// =====================================================================
+// バックアップページ
+// =====================================================================
+function loadBackups() {
+  run('getBackups', [], function(backups) {
+    backups.reverse();
+    var html = '<table><thead><tr><th>日時</th><th>種別</th><th>実行者</th><th>備考</th><th>ファイル</th></tr></thead><tbody>';
+    if (backups.length === 0) html += '<tr><td colspan="5" class="text-center">バックアップ履歴がありません</td></tr>';
+    backups.forEach(function(b) {
+      html += '<tr>';
+      html += '<td>' + escHtml(b.at) + '</td>';
+      html += '<td>' + escHtml(b.backupType) + '</td>';
+      html += '<td>' + escHtml(b.actorEmail) + '</td>';
+      html += '<td>' + escHtml(b.note) + '</td>';
+      html += '<td><a href="https://drive.google.com/file/d/' + b.driveFileId + '/view" target="_blank">開く</a></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('backupsTable').innerHTML = html;
+  });
+}
+
+function doManualBackup() {
+  if (!confirm('手動バックアップを実行しますか？')) return;
+  toast('バックアップ実行中...', 'info');
+  run('createManualBackup', [], function(result) {
+    toast('バックアップが完了しました', 'success');
+    loadBackups();
+  });
+}
+
+function doSetupAutoBackup() {
+  if (!confirm('自動バックアップ（毎日2:00）を設定しますか？')) return;
+  run('setupAutoBackupTrigger', [], function(result) {
+    toast(result.message, 'success');
+  });
+}
+
+// =====================================================================
+// 監査ログページ
+// =====================================================================
+function loadAuditLogs() {
+  run('getAuditLogs', [200, 0], function(logs) {
+    var html = '<table><thead><tr><th>日時</th><th>操作者</th><th>対象</th><th>アクション</th><th>備考</th></tr></thead><tbody>';
+    if (logs.length === 0) html += '<tr><td colspan="5" class="text-center">ログがありません</td></tr>';
+    logs.forEach(function(l) {
+      html += '<tr>';
+      html += '<td style="white-space:nowrap;font-size:11px;">' + escHtml(l.at) + '</td>';
+      html += '<td style="font-size:11px;">' + escHtml(l.actorEmail) + '</td>';
+      html += '<td style="font-size:11px;">' + escHtml(l.targetType) + ':' + escHtml(String(l.targetId).substring(0, 12)) + '</td>';
+      html += '<td><span class="badge badge-submitted">' + escHtml(l.action) + '</span></td>';
+      html += '<td style="font-size:11px;">' + escHtml(l.note || '') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('auditLogTable').innerHTML = html;
+  });
+}
+
+// =====================================================================
+// 設定ページ
+// =====================================================================
+function loadSettings() {
+  run('getSettings', [], function(settings) {
+    var fields = [
+      { key: 'closingDay', label: '締め日', type: 'number' },
+      { key: 'periodType', label: '締め期間方式 (A: 1日〜末日 / B: 前月26日〜当月25日)', type: 'select', options: [{ v: 'A', l: 'A: 1日〜末日' }, { v: 'B', l: 'B: 前月26日〜当月25日' }] },
+      { key: 'csvCharset', label: 'CSV文字コード', type: 'select', options: [{ v: 'UTF-8', l: 'UTF-8' }, { v: 'Shift_JIS', l: 'Shift_JIS' }] },
+      { key: 'pdfTitle', label: 'PDF表題', type: 'text' },
+      { key: 'orgName', label: '組織名', type: 'text' },
+      { key: 'backupFolderId', label: 'バックアップフォルダID', type: 'text' }
+    ];
+    var html = '';
+    fields.forEach(function(f) {
+      html += '<div class="form-row"><div class="form-group" style="flex:1;"><label>' + f.label + '</label>';
+      if (f.type === 'select') {
+        html += '<select id="setting_' + f.key + '">';
+        f.options.forEach(function(o) {
+          html += '<option value="' + o.v + '"' + (settings[f.key] === o.v ? ' selected' : '') + '>' + o.l + '</option>';
+        });
+        html += '</select>';
+      } else {
+        html += '<input type="' + f.type + '" id="setting_' + f.key + '" value="' + escHtml(settings[f.key] || '') + '" style="width:100%;">';
+      }
+      html += '</div></div>';
+    });
+    document.getElementById('settingsForm').innerHTML = html;
+  });
+
+  // ロール一覧
+  run('getRoles', [], function(roles) {
+    var html = '<table><thead><tr><th>メール</th><th>ロール</th><th>部署</th><th>操作</th></tr></thead><tbody>';
+    roles.forEach(function(r) {
+      html += '<tr>';
+      html += '<td>' + escHtml(r.email) + '</td>';
+      html += '<td>' + escHtml(r.role) + '</td>';
+      html += '<td>' + escHtml(r.dept || '') + '</td>';
+      html += '<td><button class="btn btn-danger btn-sm" onclick="doDeleteRole(\'' + escHtml(r.email) + '\',\'' + escHtml(r.role) + '\')">削除</button></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('rolesTable').innerHTML = html;
+  });
+}
+
+function doSaveSettings() {
+  var keys = ['closingDay', 'periodType', 'csvCharset', 'pdfTitle', 'orgName', 'backupFolderId'];
+  var updates = {};
+  keys.forEach(function(k) {
+    var el = document.getElementById('setting_' + k);
+    if (el) updates[k] = el.value;
+  });
+  run('updateSettingsBulk', [updates], function() {
+    toast('設定を保存しました', 'success');
+  });
+}
+
+function openRoleModal() {
+  document.getElementById('roleEmail').value = '';
+  document.getElementById('roleRole').value = 'APPROVER';
+  document.getElementById('roleDept').value = '';
+  openModal('roleModal');
+}
+
+function doSaveRole() {
+  var data = {
+    email: document.getElementById('roleEmail').value,
+    role: document.getElementById('roleRole').value,
+    dept: document.getElementById('roleDept').value
+  };
+  if (!data.email) { toast('メールは必須です', 'error'); return; }
+  run('saveRole', [data], function() {
+    toast('ロールを保存しました', 'success');
+    closeModal('roleModal');
+    loadSettings();
+  });
+}
+
+function doDeleteRole(email, role) {
+  if (!confirm(email + ' の ' + role + ' ロールを削除しますか？')) return;
+  run('deleteRole', [email, role], function() {
+    toast('ロールを削除しました', 'success');
+    loadSettings();
+  });
+}
+
+// =====================================================================
+// アプリ起動
+// =====================================================================
+document.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>
