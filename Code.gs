@@ -550,8 +550,8 @@ function deleteApprovalRoute(routeId) {
 // 11. 期間 (Period) ヘルパー
 // =====================================================================
 /** 設定に基づいて期間の開始日と終了日を返す */
-function getPeriodDates(periodKey) {
-  var settings = getSettings();
+function getPeriodDates(periodKey, optSettings) {
+  var settings = optSettings || getSettings();
   var parts = periodKey.split('-');
   var year = parseInt(parts[0], 10);
   var month = parseInt(parts[1], 10);
@@ -594,15 +594,23 @@ function fmtDate_(d) {
 
 /** 選択可能な期間リストを生成 */
 function getAvailablePeriods() {
+  var settings = getSettings();
   var now = new Date();
   var results = [];
   for (var i = -6; i <= 2; i++) {
     var d = new Date(now.getFullYear(), now.getMonth() + i, 1);
     var key = Utilities.formatDate(d, TZ, 'yyyy-MM');
-    var dates = getPeriodDates(key);
+    var dates = getPeriodDates(key, settings);
     results.push({ periodKey: key, label: key, startDate: dates.start, endDate: dates.end });
   }
   return results;
+}
+
+/** 初期化用: ユーザー情報と期間一覧を一括取得（ラウンドトリップ削減） */
+function initializeApp() {
+  var user = getCurrentUser();
+  var periods = getAvailablePeriods();
+  return { user: user, periods: periods };
 }
 
 // =====================================================================

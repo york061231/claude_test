@@ -415,21 +415,27 @@ var APP = {
 // 初期化
 // =====================================================================
 function initApp() {
-  run('getCurrentUser', [], function(user) {
+  run('initializeApp', [], function(result) {
+    var user = result.user;
+    var periods = result.periods;
     APP.user = user;
+    APP.periods = periods;
     document.getElementById('userInfo').textContent = user.email + (user.isAdmin ? ' [管理者]' : user.isApprover ? ' [承認者]' : '');
     setupNavigation();
-    run('getAvailablePeriods', [], function(periods) {
-      APP.periods = periods;
-      populatePeriodSelects();
-      if (user.isAdmin) {
-        loadEmployeesForProxy();
-      }
-      document.getElementById('loadingPage').classList.remove('active');
-      // 初期タブ
-      var firstTab = document.querySelector('.nav-tab');
-      if (firstTab) firstTab.click();
-    });
+    populatePeriodSelects();
+    if (user.isAdmin) {
+      loadEmployeesForProxy();
+    }
+    document.getElementById('loadingPage').classList.remove('active');
+    // 初期タブ
+    var firstTab = document.querySelector('.nav-tab');
+    if (firstTab) firstTab.click();
+  }, function(err) {
+    // エラー時もローディングを非表示にしてエラーメッセージ表示
+    document.getElementById('loadingPage').innerHTML =
+      '<div class="loading"><p style="color:var(--danger);font-weight:bold;">初期化エラー</p>' +
+      '<p>' + (err.message || '読み込みに失敗しました。ページを再読み込みしてください。') + '</p>' +
+      '<button class="btn btn-primary" onclick="location.reload()" style="margin-top:12px;">再読み込み</button></div>';
   });
 }
 
