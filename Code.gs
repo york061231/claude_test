@@ -60,13 +60,27 @@ function getSheetData_(name) {
       var val = row[j];
       // google.script.run はDateオブジェクトをシリアライズできないため文字列に変換
       if (val instanceof Date) {
-        val = Utilities.formatDate(val, TZ, "yyyy-MM-dd'T'HH:mm:ss");
+        val = dateToString_(val);
       }
       obj[headers[j]] = val;
     }
     results.push(obj);
   }
   return results;
+}
+
+/** Dateオブジェクトを元の入力形式に近い文字列に変換 */
+function dateToString_(d) {
+  // 時刻のみ: Google Sheetsはエポック日(1899-12-30)を使用する
+  if (d.getFullYear() < 1900) {
+    return Utilities.formatDate(d, TZ, 'HH:mm');
+  }
+  // 日付のみ: 時分秒がすべて0
+  if (d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0) {
+    return Utilities.formatDate(d, TZ, 'yyyy-MM-dd');
+  }
+  // 日時
+  return Utilities.formatDate(d, TZ, "yyyy-MM-dd'T'HH:mm:ss");
 }
 
 /** シートにオブジェクトを1行追記 */
