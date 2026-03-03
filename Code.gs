@@ -57,7 +57,12 @@ function getSheetData_(name) {
     if (row.every(function(c) { return c === '' || c === null || c === undefined; })) continue;
     var obj = {};
     for (var j = 0; j < headers.length; j++) {
-      obj[headers[j]] = row[j];
+      var val = row[j];
+      // google.script.run はDateオブジェクトをシリアライズできないため文字列に変換
+      if (val instanceof Date) {
+        val = Utilities.formatDate(val, TZ, "yyyy-MM-dd'T'HH:mm:ss");
+      }
+      obj[headers[j]] = val;
     }
     results.push(obj);
   }
